@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <!-- 
+    script 会把src地址请求的服务器返回内容最为一个js解析 解决跨域问题
+  -->
+  <script>
+    jsonpPackage({
+      url: 'http://127.0.0.1:8085/jsonp',
+      data: {
+        a: 1,
+        b: 2
+      },
+      success: function(res) {
+        console.log('回调函数执行');
+        console.log(res)
+      }
+    })
+
+    function jsonpPackage({url, data, success}) {
+      let callbackName = `fn${Date.now()}`;
+
+      // 创建script标签
+      let script = document.createElement('script');
+
+      // 拼接
+      let requestQuery = '?' + Object.entries(data).map(([key, value]) => {
+        return `${key}=${value}`
+      }).join('&') + `&callback=${callbackName}`;
+
+      script.src = url + requestQuery;
+
+      document.querySelector('head').appendChild(script);
+
+      // 挂在到window对象, 全局函数, 服务器返回的数据会调用
+      window[callbackName] = function(data) {
+        if (isJSON(data)) {
+          data = JSON.parse(data);
+        }
+        success(data);
+        delete window[callbackName];
+        document.querySelector('head').removeChild(script);
+      }
+
+      function isJSON(str) {
+        try {
+          JSON.parse(str)
+          return true;
+        } catch (err) {
+          return false;
+        }
+        return false;
+      }
+    }
+  </script>
+</body>
+</html>

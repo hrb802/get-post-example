@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <input type="text" name="user" id="user">
+  <input type="file" name="avatar" id="avatar">
+  <button>提交</button>
+
+  <script>
+    const userInput = document.querySelector('#user')
+    const fileInput = document.querySelector('#avatar')
+    const submitBtn = document.querySelector('button')
+
+    submitBtn.addEventListener('click', () => {
+      let file = fileInput.files[0];
+      let userData = userInput.value;
+
+      if (!file) {
+        return false;
+      }
+
+      let form = new FormData();
+      form.append('user', userData);
+      form.append('avatar', file);
+      request(form)
+    })
+
+    function request(data) {
+      let xhr = new XMLHttpRequest();
+      xhr.open('POST', 'http://127.0.0.1:8085/upload', true);
+      // 前端提交一个form对象, 不需要xhr.setRequestHeader('Content-Type': '...')
+      xhr.send(data);
+
+      xhr.onreadystatechange = function(res) {
+        if(xhr.readyState === 4 && xhr.status === 200) {
+          console.log(xhr.response);
+        }
+      }
+    }
+  </script>
+</body>
+</html>

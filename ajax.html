@@ -1,0 +1,125 @@
+<!--
+ * @Author: HeRuibin
+ * @Date: 2025-12-31 00:49:33
+ * @LastEditors: HeRuibin
+ * @LastEditTime: 2025-12-31 02:24:21
+ * @FilePath: \何蕊彬_Node_20251230\ajax.html
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <form action="javascript:;" enctype="multipart/form-data">
+    用户名: <input type="text" name="user" id="user">
+    密码: <input type="pwd" name="password" id="pwd">
+    头像: <input type="file" name="avatar" id="avatar">
+    <button>提交</button>
+  </form>
+
+  <script src="node_modules/jquery/dist/jquery.min.js"></script>
+  <script>
+    const $form = $('form')
+    const $submit = $('button')
+
+    $submit.on('click', function() {
+      let requestData = serializeJSON($form.serializeArray())
+      let form = new FormData($form[0])
+      console.log(requestData)
+      console.log($form[0].elements);
+
+      myAjax({
+        url: 'http://127.0.0.1:8085/data',
+        data: form,
+        method: 'POST',
+        contentType: 'form',
+        success(data) {
+          console.log(data)
+        },
+        error(err) {
+          console.error(err)
+        }
+      })
+    })
+
+    function serializeJSON(queryArr) {
+      return queryArr.reduce((acc, {name, value}) => {
+        acc[name] = value;
+        return acc;
+      },{})
+    }
+    
+    function myAjax({ url = "/", method = "GET", data = {}, dataType = "json", contentType = "queryStr", success = function (data) { 
+      console.log(data) 
+    }, error = function (err) { 
+      console.error(err) } 
+    }) {
+      const contentTypeMap = {
+        'json': 'application/json',
+        'form': 'multipart/form-data',
+        'text': 'text/plain',
+        'queryStr': 'application/x-www-form-urlencoded'
+      }
+
+      let xhr = new XMLHttpRequest()
+
+      method = method.toUpperCase()
+
+      xhr.responseType = dataType// text json blob buffer
+
+      if(method ===  'GET') {
+        url = '?' + fromatQueryString(data)
+        data = null
+      }
+
+      if (contentType === 'json') {
+        data = JSON.stringify(data)
+      }
+
+      if (contentType === 'queryStr') {
+        data = fromatQueryString(data)
+      }
+
+      xhr.open(method, url, true)
+      let reqHeaderContentType = contentTypeMap[contentType];
+      if (!(contentType === 'form')) {
+        xhr.setRequestHeader('content-type', reqHeaderContentType)
+      }
+      xhr.send(data)
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4 && (xhr.status >= 200 && xhr.status <= 299)) {
+          let responseData = xhr.response 
+          if (xhr.responseType === 'json' && isJSON(responseData)) {
+            responseData = JSON.parse(responseData)
+          }
+          success(responseData)
+        }
+      }
+      xhr.onerror = function (err) {
+        error(err)
+      }
+
+      function isJSON(str) {
+        try {
+          JSON.parse(str)
+          return true;
+        } catch (err) {
+          return false;
+        }
+        return false;
+      }
+
+      function fromatQueryString(data) {
+        return Object.entries(data).map(([key, value]) => {
+          return `${key}=${value}`
+        }).join('&')
+      }
+    }
+
+  </script>
+
+</body>
+</html>
